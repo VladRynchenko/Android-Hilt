@@ -1,10 +1,13 @@
-package com.example.android.hilt.data
+package com.example.android.hilt.contentprovider
 
-import android.content.ContentProvider
-import android.content.ContentValues
-import android.content.UriMatcher
+import android.content.*
 import android.database.Cursor
 import android.net.Uri
+import com.example.android.hilt.data.LogDao
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
 
 /** The authority of this content provider.  */
 private const val LOGS_TABLE = "logs"
@@ -24,8 +27,21 @@ class LogsContentProvider : ContentProvider() {
         addURI(AUTHORITY, "$LOGS_TABLE/*", CODE_LOGS_ITEM)
     }
 
+    @InstallIn(SingletonComponent::class)
+    @EntryPoint
+    interface LogsContentProviderEntryPoint {
+        fun logDao(): LogDao
+    }
+
     override fun onCreate(): Boolean {
         return true
+    }
+
+    private fun getLogDao(appContext: Context): LogDao {
+        val hiltEntryPoint = EntryPointAccessors.fromApplication(
+            appContext, LogsContentProviderEntryPoint::class.java
+        )
+        return hiltEntryPoint.logDao()
     }
 
     override fun query(
@@ -70,6 +86,6 @@ class LogsContentProvider : ContentProvider() {
         selection: String?,
         selectionArgs: Array<out String>?
     ): Int {
-        TODO("Not yet implemented")
+        throw UnsupportedOperationException("Only reading operations are allowed")
     }
 }
